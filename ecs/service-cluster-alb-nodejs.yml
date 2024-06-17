@@ -111,6 +111,7 @@ Parameters:
     - 480
     - 512
     - 768
+    - 1024
   DesiredCount:
     Description: 'The number of simultaneous tasks, that you want to run on the cluster.'
     Type: Number
@@ -131,6 +132,10 @@ Parameters:
     MinValue: 1
   SubDomainNameWithDot:
     Description: 'Name that is used to create the DNS entry with trailing dot, e.g. ${SubDomainNameWithDot}${HostedZoneName}. Leave blank for naked (or apex and bare) domain. Requires ParentZoneStack parameter!'
+    Type: String
+    Default: ''
+  SQSQueueName0:
+    Description: 'SQS Queue for scaling policy'
     Type: String
     Default: ''
 Mappings: {}
@@ -541,6 +546,58 @@ Resources:
       Threshold: 30
       AlarmActions:
       - !Ref ScaleDownPolicy
+  MemoryUtilizationHighAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: 'Service is running out of Memory'
+      Namespace: 'AWS/ECS'
+      Dimensions:
+      - Name: ClusterName
+        Value: {'Fn::ImportValue': !Sub '${ParentClusterStack}-Cluster'}
+      - Name: ServiceName
+        Value: !GetAtt 'Service.Name'
+      MetricName: MemoryUtilization
+      ComparisonOperator: GreaterThanThreshold
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 50
+      AlarmActions:
+      - !Ref ScaleUpPolicy
+  MemoryUtilizationLowAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: 'Service is wasting Memory'
+      Namespace: 'AWS/ECS'
+      Dimensions:
+      - Name: ClusterName
+        Value: {'Fn::ImportValue': !Sub '${ParentClusterStack}-Cluster'}
+      - Name: ServiceName
+        Value: !GetAtt 'Service.Name'
+      MetricName: MemoryUtilization
+      ComparisonOperator: LessThanThreshold
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 3
+      Threshold: 25
+      AlarmActions:
+      - !Ref ScaleDownPolicy
+  SQSVisibleMessageHighAlarm0:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: 'Alarm to scale if queue length is high'
+      Namespace: 'AWS/SQS'
+      Dimensions:
+      - Name: QueueName
+        Value: !Ref SQSQueueName0
+      MetricName: ApproximateNumberOfMessagesVisible
+      ComparisonOperator: GreaterThanThreshold
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 100
+      AlarmActions:
+      - !Ref ScaleUpPolicy
   ECSTaskRole:
     Type: 'AWS::IAM::Role'
     Properties:
