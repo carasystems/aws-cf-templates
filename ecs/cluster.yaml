@@ -858,6 +858,8 @@ Resources:
       ImageId: !FindInMap [RegionMap, !Ref 'AWS::Region', ECSAMI]
       IamInstanceProfile: !Ref InstanceProfile
       InstanceType: !Ref InstanceType
+      MetadataOptions:
+        HttpTokens: required
       SecurityGroups:
       - !Ref SecurityGroup
       - !If [HasClientSecurityGroup1, {'Fn::ImportValue': !Sub '${ParentClientStack1}-ClientSecurityGroup'}, !Ref 'AWS::NoValue']
