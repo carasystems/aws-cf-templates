@@ -69,7 +69,6 @@ Parameters:
   TenableXKey:
     Description: X-Key for Tenable install
     Type: String
-    Default: 8487e4dfa0e7b8d99652a51db2fe0ab6ad2d3d98e639da865592211d17ecdc75
   ParentVPCStack:
     Description: 'Stack name of parent VPC stack based on vpc/vpc-*azs.yaml template.'
     Type: String
@@ -875,7 +874,7 @@ Resources:
           yum install -y aws-cfn-bootstrap
           /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchConfiguration --region ${AWS::Region}
           cd ~
-          curl -H 'X-Key: ${TenableXKey}' 'https://sensor.cloud.tenable.com/install/agent?name=agent-name&groups=agent-group' | bash
+          curl -H 'X-Key: ${TenableXKey}' 'https://sensor.cloud.tenable.com/install/agent?name=${AWS::StackName}-Cluster&groups=Thimble' | bash
           aws s3 cp s3://${OpsScriptsBucket}/pkgs/falcon-sensor-installer.sh . --no-progress
           aws s3 cp s3://${OpsScriptsBucket}/pkgs/ecs-workload-init.sh . --no-progress
           chmod +x ./falcon-sensor-installer.sh
