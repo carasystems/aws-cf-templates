@@ -69,7 +69,6 @@ Parameters:
   TenableXKey:
     Description: X-Key for Tenable install
     Type: String
-    Default: 8487e4dfa0e7b8d99652a51db2fe0ab6ad2d3d98e639da865592211d17ecdc75
   ParentVPCStack:
     Description: 'Stack name of parent VPC stack based on vpc/vpc-*azs.yaml template.'
     Type: String
@@ -247,7 +246,7 @@ Mappings:
     'us-west-1':
       ECSAMI: 'ami-00271233a1ebb9161'
     'us-west-2':
-      ECSAMI: 'ami-0533e026caaae18f6'
+      ECSAMI: 'ami-0112d63737f38c74f'
 Conditions:
   HasPermissionsBoundary: !Not [!Equals [!Ref PermissionsBoundary, '']]
   HasKeyName: !Not [!Equals [!Ref KeyName, '']]
@@ -858,6 +857,8 @@ Resources:
       ImageId: !FindInMap [RegionMap, !Ref 'AWS::Region', ECSAMI]
       IamInstanceProfile: !Ref InstanceProfile
       InstanceType: !Ref InstanceType
+      MetadataOptions:
+        HttpTokens: required
       SecurityGroups:
       - !Ref SecurityGroup
       - !If [HasClientSecurityGroup1, {'Fn::ImportValue': !Sub '${ParentClientStack1}-ClientSecurityGroup'}, !Ref 'AWS::NoValue']
@@ -873,7 +874,7 @@ Resources:
           yum install -y aws-cfn-bootstrap
           /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchConfiguration --region ${AWS::Region}
           cd ~
-          curl -H 'X-Key: ${TenableXKey}' 'https://sensor.cloud.tenable.com/install/agent?name=agent-name&groups=agent-group' | bash
+          curl -H 'X-Key: ${TenableXKey}' 'https://sensor.cloud.tenable.com/install/agent?name=${AWS::StackName}-Cluster&groups=Thimble' | bash
           aws s3 cp s3://${OpsScriptsBucket}/pkgs/falcon-sensor-installer.sh . --no-progress
           aws s3 cp s3://${OpsScriptsBucket}/pkgs/ecs-workload-init.sh . --no-progress
           chmod +x ./falcon-sensor-installer.sh
